@@ -20,7 +20,7 @@ library(DT)
 library(tidyverse)
 
 # Read the file
-  file_path <- "data/test.pgn"
+  file_path <- "data/lichess_db.10.pgn"
 file_lines <- readLines(file_path)
 
 # Split the file into separate games
