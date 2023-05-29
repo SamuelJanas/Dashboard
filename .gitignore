@@ -1,4 +1,6 @@
 data/*
+*.html
+chessaholic_files/*
 
 # History files
 .Rhistory

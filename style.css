@@ -13,4 +13,28 @@
       color: #ffffff;
       background-color: #684e39;
   }
-  
+.js-irs-0 .irs-bar {
+border-top-color: #9a7354;
+border-bottom-color: #9a7354;
+} 
+
+.js-irs-0 .irs-bar-edge {
+border-color: #9a7354;
+}
+
+.js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {
+background: #b58863;
+}
+
+.js-irs-1 .irs-bar {
+border-top-color: #10d010;
+border-bottom-color: #10d010;
+} 
+
+.js-irs-1 .irs-bar-edge {
+border-color: #10d010;
+}
+
+.js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {
+background: #b58863;
+}

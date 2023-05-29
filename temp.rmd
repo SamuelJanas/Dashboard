@@ -1,0 +1,104 @@
+Introduction
+===
+
+Column {data-width=600}
+-------------------------------------
+    
+### Games
+    
+```{r}
+
+number_of_games <- nrow(games_dt)
+
+valueBox(format(number_of_games, big.mark=","), 
+         icon = "fa-chess")
+
+```
+
+### Players
+    
+```{r}
+
+number_of_users <- nrow(player_elo)
+valueBox(format(number_of_users, big.mark=","), 
+         icon = "fa-user")
+
+```
+
+
+### Win Percentage by piece color
+
+```{r}
+
+black_wins <- sum(player_stats$winsAsBlack)
+white_wins <- sum(player_stats$winsAsWhite)
+ties <- sum(player_stats$drawsAsBlack) + sum(player_stats$drawsAsWhite)
+
+pie_data <- data.frame(
+  player = c("Black", "White", "Tie"),
+  wins = c(black_wins, white_wins, ties)
+)
+
+pie_data$percent <- pie_data$wins / sum(pie_data$wins)
+colors <- c("black", "grey", "white")
+pie_data$label <- paste0(pie_data$player, " (", round(pie_data$percent * 100, 2), "%)")
+pie_data$ymax <- cumsum(pie_data$percent)
+pie_data$ymin <- c(0, head(pie_data$ymax, n = -1))
+
+donut <- ggplot(pie_data, aes(fill = player, ymax = ymax, ymin = ymin, xmax = 4, xmin = 3)) +
+  geom_rect(colour = "#b58863") +
+  coord_polar(theta = "y") +
+  xlim(c(2, 4)) +
+  geom_label(aes(x = 3.5, y = (ymin + ymax) / 2, label = label), size = 4, color = "#684e39") +
+  theme_void() +
+  theme(legend.position = "none") + scale_fill_manual(values = colors)
+
+donut
+
+```
+
+
+Column {data-width=600}
+-------------------------------------
+    
+### Selected Players Stats
+    
+```{r}
+
+# Display percentages from player_stats
+percentages <- player_stats[, c("player", "elo", "winPercentage", "drawPercentage", "lossPercentage")]
+percentages <- percentages[order(-elo)]
+
+datatable(percentages, 
+          rownames = FALSE, 
+          colnames = c("Player", "ELO", "Win%", "Draw%", "Loss%"), 
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = "_all")),
+            paging = FALSE,
+            searching = FALSE,
+            ordering = FALSE,
+            info = FALSE
+          ))
+
+```
+
+### Most Common Openings
+    
+```{r}
+
+# Display a table sorted by most common openings
+openings <- games_dt[, .(numberOfGames = .N, whiteWinPercentage = round(mean(result == "1-0"), 2)), by = opening]
+openings <- openings[order(-numberOfGames)]
+
+datatable(openings, 
+          rownames = FALSE, 
+          colnames = c("Opening", "Games", "Win %"), 
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = "_all")),
+            paging = FALSE,
+            searching = FALSE,
+            ordering = FALSE,
+            info = FALSE
+          ))
+
+```
