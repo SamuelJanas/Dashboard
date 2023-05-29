@@ -1,0 +1,235 @@
+---
+title: "Chessaholic"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    css: "style.css"
+---
+
+```{r setup, include=FALSE}
+
+source("funcs.R")
+library(flexdashboard)
+library(data.table)
+library(stringr)
+library(ggplot2)
+library(DT)
+library(tidyverse)
+
+
+```
+
+```{r loadingData, include=FALSE}
+
+# Read the file
+file_path <- "data/lichess_db.10.pgn"
+file_lines <- readLines(file_path)
+
+# Split the file into separate games
+game_lines <- gamify(file_lines, delimiter="\\[Event")
+
+# Create a single data.table
+games_dt <- createGameDatatable(game_lines)
+# drop all rows with NA anywhere
+games_dt <- games_dt[complete.cases(games_dt),]
+
+
+```
+
+
+```{r SelectedPlayers}
+
+player_elo <- find_elo(games_dt)
+# drop NA
+player_elo <- player_elo[!is.na(player_elo$elo),]
+
+
+selectedPlayers <- games_dt[, .(games = .N), by = white][order(-games)][1:50, white]
+selectedPlayers <- c(selectedPlayers, games_dt[, .(games = .N), by = black][order(-games)][1:50, black])
+selectedPlayers <- unique(selectedPlayers)
+
+player_stats <- lapply(selectedPlayers, calculatePlayerStats)
+player_stats <- rbindlist(player_stats)
+
+```
+
+
+Introduction
+===
+
+Column {data-width=600}
+-------------------------------------
+    
+### Games
+    
+```{r}
+
+number_of_games <- nrow(games_dt)
+
+valueBox(format(number_of_games, big.mark=","), 
+         icon = "fa-chess")
+
+```
+
+### Players
+    
+```{r}
+
+number_of_users <- nrow(player_elo)
+valueBox(format(number_of_users, big.mark=","), 
+         icon = "fa-user")
+
+```
+
+
+### Win Percentage by piece color
+
+```{r}
+
+black_wins <- sum(player_stats$winsAsBlack)
+white_wins <- sum(player_stats$winsAsWhite)
+ties <- sum(player_stats$drawsAsBlack) + sum(player_stats$drawsAsWhite)
+
+pie_data <- data.frame(
+  player = c("Black", "White", "Tie"),
+  wins = c(black_wins, white_wins, ties)
+)
+
+pie_data$percent <- pie_data$wins / sum(pie_data$wins)
+colors <- c("black", "grey", "white")
+pie_data$label <- paste0(pie_data$player, " (", round(pie_data$percent * 100, 2), "%)")
+pie_data$ymax <- cumsum(pie_data$percent)
+pie_data$ymin <- c(0, head(pie_data$ymax, n = -1))
+
+donut <- ggplot(pie_data, aes(fill = player, ymax = ymax, ymin = ymin, xmax = 4, xmin = 3)) +
+  geom_rect(colour = "#b58863") +
+  coord_polar(theta = "y") +
+  xlim(c(2, 4)) +
+  geom_label(aes(x = 3.5, y = (ymin + ymax) / 2, label = label), size = 4, color = "#684e39") +
+  theme_void() +
+  theme(legend.position = "none") + scale_fill_manual(values = colors)
+
+donut
+
+```
+
+
+Column {data-width=600}
+-------------------------------------
+    
+### Selected Players Stats
+    
+```{r}
+
+# Display percentages from player_stats
+percentages <- player_stats[, c("player", "elo", "winPercentage", "drawPercentage", "lossPercentage")]
+percentages <- percentages[order(-elo)]
+
+datatable(percentages, 
+          rownames = FALSE, 
+          colnames = c("Player", "ELO", "Win%", "Draw%", "Loss%"), 
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = "_all")),
+            paging = FALSE,
+            searching = FALSE,
+            ordering = FALSE,
+            info = FALSE
+          ))
+
+```
+
+### Most Common Openings
+    
+```{r}
+
+# Display a table sorted by most common openings
+openings <- games_dt[, .(numberOfGames = .N, whiteWinPercentage = round(mean(result == "1-0"), 2)), by = opening]
+openings <- openings[order(-numberOfGames)]
+
+datatable(openings, 
+          rownames = FALSE, 
+          colnames = c("Opening", "Games", "Win %"), 
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = "_all")),
+            paging = FALSE,
+            searching = FALSE,
+            ordering = FALSE,
+            info = FALSE
+          ))
+
+```
+
+2000 ELO
+=====================================  
+    
+Column {data-width=600}
+-------------------------------------
+    
+### Players are worse than you
+    
+```{r}
+
+lower.2000 <- nrow(player_elo[player_elo$elo <= 2000,])
+
+valueBox(format(lower.2000, big.mark=","), 
+         icon = "fa-user")
+
+
+```
+
+
+### Are awaiting for you to beat them
+
+```{r}
+
+upper.2000 <- nrow(player_elo[player_elo$elo > 2000,])
+
+valueBox(format(upper.2000, big.mark=","), 
+         icon = "fa-user")
+
+```
+
+### You're here!
+
+```{r}
+ggplot(player_elo, aes(x = elo)) +
+  geom_histogram(binwidth = 50, fill = "black") +
+  geom_vline(xintercept = 2000, linetype = "dashed", color = "red", size = 1.0) +
+  theme_void()
+
+```
+   
+Column {data-width=400}
+-------------------------------------
+   
+### Chart 2
+
+```{r}
+
+filtered_games <- games_dt[games_dt$white_elo <= 2000 | games_dt$black_elo <= 2000,]
+
+filtered_games <- filtered_games[, .(numberOfGames = .N, whiteWinPercentage = round(mean(result == "1-0"), 2)), by = opening]
+
+filtered_games <- filtered_games[order(-whiteWinPercentage)]
+
+datatable(filtered_games, 
+          rownames = FALSE, 
+          colnames = c("Opening", "Games", "Win %"), 
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = "_all")),
+            paging = FALSE,
+            searching = FALSE,
+            ordering = FALSE,
+            info = FALSE
+          ))
+
+```
+
+
+```   
+ 
+### Chart 3
+    
+```{r}
+```
