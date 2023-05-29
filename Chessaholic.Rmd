@@ -132,22 +132,6 @@ renderValueBox({
 ```
 
 
-```{r}
-
-radioButtons("dummy_piece_color", label = "Color", choices = c("White", "Black"), selected = "White")
-
-```
-
-
-```{r}
-
-sliderInput("elo_rating", label = "ELO", min = 800, max = 2500, value = 1600, step = 50)
-
-radioButtons("piece_color", label = "Color", choices = c("White", "Black"), selected = "White")
-
-```
-
-
 
 ELO info
 =====================================  
