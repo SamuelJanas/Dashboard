@@ -129,6 +129,40 @@ radioButtons("piece_color", label = "Color", choices = c("White", "Black"), sele
 
 ```{r}
 
+filtered_openings <- reactive({
+  # take only the games where white_elo is above input$elo_rating or black_elo is above input$elo_rating
+  filtered <- games_dt[white_elo > input$elo_rating | black_elo > input$elo_rating, ]
+
+  # choose only the opening and result columns
+  filtered <- filtered[, .(opening, result)]
+
+  # group by opening, sum the number of games and wins
+  if (input$piece_color == "White") {
+    filtered <- filtered[, .(games = .N, wins = sum(result == "1-0")), by = opening]
+  } else {
+    filtered <- filtered[, .(games = .N, wins = sum(result == "0-1")), by = opening]
+  }
+
+  # change wins to win_rate rounded to 2 decimals
+  filtered[, win_rate := round(wins / games, 2)]
+
+  # drop openings with less than 20 games
+  filtered <- filtered[games >= 20]
+
+  # delete the opening named '?'
+  filtered <- filtered[opening != "?"]
+
+  # sort by win rate
+  filtered <- filtered[order(-win_rate)]
+
+  return(filtered) 
+})
+
+renderDataTable({
+  filtered_openings()
+})
+
+```
 
 ```
 
