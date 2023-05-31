@@ -20,7 +20,7 @@ library(DT)
 library(tidyverse)
 
 # Read the file
-file_path <- "data/lichess_db.10.pgn"
+  file_path <- "data/lichess_db.10.pgn"
 file_lines <- readLines(file_path)
 
 # Split the file into separate games
@@ -45,6 +45,91 @@ player_stats <- rbindlist(player_stats)
 
 ```
 
+
+
+Introduction
+=====================================
+
+Column {data-width=600}
+-------------------------------------
+
+### Chessaholic is a simple tool to help you improve your chess skills.
+#### It's purpose is to help you find the best openings for your level and encourage to level up in chess rankings. We are looking for and opening that increases your chances of winning the game. 
+
+### Win Percentage by piece color regardless of opening
+
+```{r}
+
+black_wins <- sum(player_stats$winsAsBlack)
+white_wins <- sum(player_stats$winsAsWhite)
+ties <- sum(player_stats$drawsAsBlack) + sum(player_stats$drawsAsWhite)
+
+pie_data <- data.frame(
+  player = c("Black", "White", "Tie"),
+  wins = c(black_wins, white_wins, ties)
+)
+
+pie_data$percent <- pie_data$wins / sum(pie_data$wins)
+colors <- c("black", "grey", "white")
+pie_data$label <- paste0(pie_data$player, " (", round(pie_data$percent * 100, 2), "%)")
+pie_data$ymax <- cumsum(pie_data$percent)
+pie_data$ymin <- c(0, head(pie_data$ymax, n = -1))
+
+donut <- ggplot(pie_data, aes(fill = player, ymax = ymax, ymin = ymin, xmax = 4, xmin = 3)) +
+  geom_rect(colour = "#b58863") +
+  coord_polar(theta = "y") +
+  xlim(c(2, 4)) +
+  geom_label(aes(x = 3.5, y = (ymin + ymax) / 2, label = label), size = 4, color = "#684e39") +
+  theme_void() +
+  theme(legend.position = "none") + scale_fill_manual(values = colors)
+
+donut
+
+```
+
+Column {data-width=450}
+-------------------------------------
+
+### Quick insturction:
+
+* choose your ELO rating with a slider
+* enter color you want to play with
+* check the suggested openings sorted by the win rate for your level
+* play and win!
+
+### examplery slider
+
+```{r}
+
+sliderInput("dummy_elo_rating", label = "ELO", min = 800, max = 2500, value = 1600, step = 50)
+
+```
+
+### your ELO
+
+```{r}
+
+renderValueBox({
+  valueBox(
+    input$dummy_elo_rating,
+    if (input$dummy_elo_rating < 1000) {
+      "Begginning of a journey, I see"
+    } else if (input$dummy_elo_rating < 1300) {
+       "You're getting there"
+    } else if (input$dummy_elo_rating < 1600) {
+       "Grind is real"
+    } else if (input$dummy_elo_rating < 2000) {
+       "Les go!"
+    } else if (input$dummy_elo_rating < 2300) {
+       "Impressive!!"
+    } else {
+       "Do your really need us?"
+    },
+    color = "#b58863"
+  )
+})
+
+```
 
 
 
