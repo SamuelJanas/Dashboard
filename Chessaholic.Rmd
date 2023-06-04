@@ -20,7 +20,7 @@ library(DT)
 library(tidyverse)
 
 # Read the file
-  file_path <- "data/lichess_db.10.pgn"
+  file_path <- "data/lichess_db.2.pgn"
 file_lines <- readLines(file_path)
 
 # Split the file into separate games
@@ -52,11 +52,14 @@ Introduction
 
 Column {data-width=600}
 -------------------------------------
+### Who are we?
+#### Chessaholic is a simple tool to help you improve your chess skills.
+#### It's purpose is to help you find the best openings for your level and encourage to level up in chess rankings. We are looking for an opening that increases your chances of winning the game. 
+<p align="center">
+  <img src="data/pp_monogram.jpg" width="350" title="pp">
+</p>
 
-### Chessaholic is a simple tool to help you improve your chess skills.
-#### It's purpose is to help you find the best openings for your level and encourage to level up in chess rankings. We are looking for and opening that increases your chances of winning the game. 
-
-### Win Percentage by piece color regardless of opening
+### Win percentage by piece color regardless of opening
 
 ```{r}
 
@@ -79,7 +82,7 @@ donut <- ggplot(pie_data, aes(fill = player, ymax = ymax, ymin = ymin, xmax = 4,
   geom_rect(colour = "#b58863") +
   coord_polar(theta = "y") +
   xlim(c(2, 4)) +
-  geom_label(aes(x = 3.5, y = (ymin + ymax) / 2, label = label), size = 4, color = "#684e39") +
+  geom_label(aes(x = 3.5, y = (ymin + ymax) / 2, label = label), size = 8, color = "#684e39") +
   theme_void() +
   theme(legend.position = "none") + scale_fill_manual(values = colors)
 
@@ -90,40 +93,42 @@ donut
 Column {data-width=450}
 -------------------------------------
 
-### Quick insturction:
+### Quick instruction:
 
 * choose your ELO rating with a slider
 * enter color you want to play with
 * check the suggested openings sorted by the win rate for your level
 * play and win!
 
-### examplery slider
+### What's your elo?
 
 ```{r}
 
-sliderInput("dummy_elo_rating", label = "ELO", min = 800, max = 2500, value = 1600, step = 50)
+sliderInput("delo_rating", label = "ELO", min = 800, max = 2500, value = 1600, step = 50)
 
 ```
 
-### your ELO
+### d-_-b
 
 ```{r}
 
 renderValueBox({
   valueBox(
-    input$dummy_elo_rating,
-    if (input$dummy_elo_rating < 1000) {
+    input$delo_rating,
+    if (input$delo_rating < 1000) {
       "Begginning of a journey, I see"
-    } else if (input$dummy_elo_rating < 1300) {
+    } else if (input$delo_rating < 1300) {
        "You're getting there"
-    } else if (input$dummy_elo_rating < 1600) {
+    } else if (input$delo_rating < 1600) {
        "Grind is real"
-    } else if (input$dummy_elo_rating < 2000) {
-       "Les go!"
-    } else if (input$dummy_elo_rating < 2300) {
+    } else if (input$delo_rating < 2000) {
+       "Lesss go!"
+    } else if (input$delo_rating < 2300) {
        "Impressive!!"
-    } else {
+    } else if (input$delo_rating < 2499){
        "Do your really need us?"
+    } else{
+      "DB?!"
     },
     color = "#b58863"
   )
@@ -204,7 +209,7 @@ Column {data-width=450}
 
 ```{r}
 
-sliderInput("elo_rating", label = "ELO", min = 800, max = 2500, value = 1600, step = 50)
+sliderInput("elo_rating", label = "ELO", min = 800, max = 2500, value=1600, step = 50)
 
 radioButtons("piece_color", label = "Color", choices = c("White", "Black"), selected = "White")
 
@@ -246,8 +251,6 @@ filtered_openings <- reactive({
 renderDataTable({
   filtered_openings()
 })
-
-```
 
 ```
 
